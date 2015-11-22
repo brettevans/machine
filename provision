@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Create Development Directory If It Doesn't Exist
+if [ ! -d "$HOME/Development/" ]; then
+  echo "Creating Development Directory ..."
+  mkdir "$HOME/Development"
+fi
+
+# Install Nix Package Manager
+if ! command -v brew > /dev/null; then
+  echo "Installing Nix Package Manager ..."
+    curl https://nixos.org/nix/install | sh
+fi
