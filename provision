@@ -1,13 +1,37 @@
 #!/usr/bin/env bash
 
 # Create Development Directory If It Doesn't Exist
-if [ ! -d "$HOME/Development/" ]; then
+if [ ! -d ~/Development/ ]; then
   echo "Creating Development Directory ..."
-  mkdir "$HOME/Development"
+  mkdir ~/Development
 fi
 
-# Install Nix Package Manager
-if ! command -v brew > /dev/null; then
+# Install Nix Package Manager If Not Installed
+if ! command -v nix-env > /dev/null; then
   echo "Installing Nix Package Manager ..."
     curl https://nixos.org/nix/install | sh
 fi
+
+packages=(git vim)
+
+install() {
+  echo "Installing $1 ..."
+  nix-env -i $1
+}
+
+upgrade() {
+  echo "Upgrading $1 ..."
+  nix-env -u $1
+}
+
+install_or_upgrade() {
+ if ! nix-env -q $1 > /dev/null; then
+   install $1
+ else
+   upgrade $1
+ fi
+}
+
+for package in ${packages[@]}; do
+  install_or_upgrade $package
+done
