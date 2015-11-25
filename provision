@@ -1,18 +1,60 @@
-#!/usr/bin/env bash
+#!/bin/bash -eu
 
-# Create Development Directory If It Doesn't Exist
-if [ ! -d ~/Development/ ]; then
-  echo "Creating Development Directory ..."
-  mkdir ~/Development
-fi
+# Provisions a Machine From Scratch
 
-# Install Nix Package Manager If Not Installed
-if ! command -v nix-env > /dev/null; then
-  echo "Installing Nix Package Manager ..."
-    curl https://nixos.org/nix/install | sh
+set -o pipefail
+
+if ${trace:-false}; then
+  set -x
 fi
 
 packages=(git vim)
+
+provision-machine() {
+  create-development-directory
+  install-nix
+  install-or-upgrade-packages
+}
+
+create-development-directory() {
+  if development-directory-doesnt-exist; then
+    echo "Creating Development Directory ..."
+    mkdir ~/Development
+  fi
+}
+
+development-directory-doesnt-exist() {
+  test ! -d ~/Development
+}
+
+install-nix() {
+  if nix-env-isnt-installed; then
+    echo "Installing Nix Package Manager ..."
+    curl https://nixos.org/nix/install | sh
+  fi
+}
+
+nix-env-isnt-installed() {
+  test `which -s nix-env`
+}
+
+install-or-upgrade-packages() {
+  for package in ${packages[@]}; do
+    install_or_upgrade $package
+  done 
+}
+
+install_or_upgrade() {
+ if package-isnt-installed $1; then
+   install $1
+ else
+   upgrade $1
+ fi
+}
+
+package-isnt-installed() {
+  test `nix-env -q $1 > /dev/null`
+}
 
 install() {
   echo "Installing $1 ..."
@@ -24,14 +66,4 @@ upgrade() {
   nix-env -u $1
 }
 
-install_or_upgrade() {
- if ! nix-env -q $1 > /dev/null; then
-   install $1
- else
-   upgrade $1
- fi
-}
-
-for package in ${packages[@]}; do
-  install_or_upgrade $package
-done
+provision-machine
